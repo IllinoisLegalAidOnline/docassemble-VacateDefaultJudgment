@@ -49,21 +49,21 @@ code: |
   set_progress(5)
   whats_next
   accept_terms
-  if existing_case == False:
-    must_be_existing_case
+  if default_judgment == False:
+    must_be_default_judgment
   
   set_progress(15)
   nav.set_section('section_case_info')
-  party_label
-  users.gather()
-  set_progress(20)
-
-  if party_label != "defendant" or party_label != "respondent":
+  judgment_date
+  if days_since_judgment.days > 30:
+    must_be_within_30_days
+  if party_label == "plaintiff" or party_label == "petitioner":
     defendants_only_kickout
-  anyone_opposing = True # 
+  users.gather()
+  set_progress(25)
   other_parties.gather()
   
-  set_progress(25)
+  set_progress(30)
   if in_re_check == True:
     in_re_label
   if trial_court_index == -1:
@@ -71,29 +71,31 @@ code: |
   # courthouse_info
   case_number
   
-  set_progress(30)
+  set_progress(40)
   nav.set_section('section_motion')
+  reasons
+  date_learned
+  judgment_time
   motion_body
-    
-  set_progress(60)
-  nav.set_section('section_delivery')
-  if anyone_opposing == True or users.number() > 1:
 
-    notice_intro
-    if has_court_date:
-      hearing_date
-    attend_court
-
-    delivery_intro
-    for person in delivery_parties:
-      if person.is_represented:
-        person.lawyer.name.first
-      person.address.address
-      if person.knows_delivery_method:
-        person.mail_delivery
-        person.delivery_date
   
-    hand_delivery_info
+  set_progress(55)
+  nav.set_section('section_delivery')
+  notice_intro
+  if has_court_date:
+    hearing_date
+  attend_court
+  delivery_intro
+  set_progress(75)
+  for person in delivery_parties:
+    if person.is_represented:
+      person.lawyer.name.first
+    person.address.address
+    if person.knows_delivery_method:
+      person.mail_delivery
+      person.delivery_date
+
+  hand_delivery_info
 
   courthouse_info
 
@@ -145,7 +147,7 @@ subquestion: |
 
   This program helps you ask the court to undo a default judgment within 30 days of that judgment.
   
-  To learn more, read ILAO's article about [**Vacating a default judgmentt**](https://www.illinoislegalaid.org/node/32421).
+  To learn more, read ILAO's article about [**Vacating a default judgment**](https://www.illinoislegalaid.org/node/32421).
 field: sees_nav_bar
 ---
 id: instructions
@@ -187,31 +189,51 @@ subquestion: |
   
   To learn more, read the instructions you can download at the end of this program. 
 ---
-id: existing case
+id: default judgment
 question: |
-  Are you filing a motion into an existing case?
+  Did the court enter a default judgment against you in your court case?
 subquestion: |
-  The court case must have already started, either by you or someone else.
-  
-  ${ collapse_template(motion_help) }  
+  If you are sued and you do not participate in the court case, the judge may enter a judgment against you. This is called a "Default" judgment.
 fields:
-  - no label: existing_case
+  - no label: default_judgment
     datatype: yesnoradio  
 ---
-template: motion_help
-subject: |
-  **What if I am not sure?**
-content: |
-  Most motions are filed into cases that are still ongoing, but some motions are filed into cases after they are finished. For example, someone might file a Motion to Seal a Court Record into a case that is already over.
-
----
-id: must be existing case
-event: must_be_existing_case
+id: must be default judgment
+event: must_be_default_judgment
 question: |
   Sorry
 subquestion: |
-  You can only file a motion into a case that has already started.
+  You can only ask the court to vacate a default judgment if one was entered against you.
 
+  Click **Back** if you made a mistake. Or you can talk with a lawyer to discuss your options. Use **[Get Legal Help](https://www.illinoislegalaid.org/get-legal-help)** to find free or low-cost legal services in your area.
+buttons:
+  - Exit: exit
+  - Restart: restart
+---
+id: default judgment date
+question: |
+  When did the court enter a default judgment against you?
+subquestion: |
+  This is the date that the judge signed the order. It should be written or stamped on the judgment.
+fields:
+  - Default judgment date: judgment_date
+    datatype: ThreePartsDate
+    alMax: ${today()}
+---
+depends on:
+  - judgment_date
+code: |
+  days_since_judgment = date_difference(starting=judgment_date, ending=today())
+---
+id: must be within 30 days
+event: must_be_within_30_days
+question: |
+  Sorry
+subquestion: |
+  You can only ask the court to vacate a default judgment if one was entered against you **within the last 30 days**.
+
+  To learn more, read ILAO's article about [**Vacating a default judgmentt**](https://www.illinoislegalaid.org/node/32421).
+  
   Click **Back** if you made a mistake. Or you can talk with a lawyer to discuss your options. Use **[Get Legal Help](https://www.illinoislegalaid.org/get-legal-help)** to find free or low-cost legal services in your area.
 buttons:
   - Exit: exit
@@ -239,7 +261,18 @@ content: |
   If someone filed the case against you, you are either the Defendant or the Respondent.
 
   The other court forms in the case should help you figure it out. Look at the top (the caption) of the Complaint or Petition. That form should have a label by your name.
+---
+id: must be defendant or respondent
+event: defendants_only_kickout
+question: |
+  Sorry
+subquestion: |
+  You must be a **defendant** or **respondent** to vacate a default judgment using this program.
 
+  Click **Back** if you made a mistake. Or you can talk with a lawyer to discuss your options. Use **[Get Legal Help](https://www.illinoislegalaid.org/get-legal-help)** to find free or low-cost legal services in your area.
+buttons:
+  - Exit: exit
+  - Restart: restart
 ---
 id: any other users
 question: |
@@ -261,15 +294,6 @@ content: |
   You said you are the ${ party_label.capitalize() }. The other people on your side of the case would be co-${ party_label}s.
   
   The other ${ party_label}s should be listed with you at the top of your court papers.
----
-id: any other party
-question: |
-  Are there ${ opposing_label }s in the case?
-subquestion: |
-  Certain kinds of cases do not have an opposing party, such as a Name Change or an Expungement case.
-fields:
-  - no label: anyone_opposing
-    datatype: yesnoradio
 ---
 id: user name
 sets:
@@ -316,17 +340,6 @@ code: |
     opposing_label = 'respondent'
   if party_label == 'respondent':
     opposing_label = 'petitioner'
----
-id: any other party
-question: |
-  Are there ${ opposing_label }s in the case?
-subquestion: |
-  Certain kinds of cases do not have an opposing party, such as a Name Change or an Expungement case.
-
-  ${ collapse_template(other_parties_help) }
-fields:
-  - no label: anyone_opposing
-    datatype: yesnoradio
 ---
 template: other_parties_help
 subject: |
@@ -479,283 +492,44 @@ content: |
     * If you want the judge to dismiss a case against you because it has no basis in law or fact, you could ask to: Dismiss the case.
 
 ---
-id: motion body
+id: reasons for missing court date
 question: |
-  What do you want the judge to do?
+  Why did you miss court on ${ judgment_date }?
 subquestion: |
-  Tips:  
+  Some people miss court because of a family or medical emergency. Sometimes they don't know about the court date because court papers did not arrive in time or were confusing.
   
-  * Start each statement with a number,   
-  * Explain why the judge should agree with what you are asking. Be sure to include facts and laws, if known, that support your motion, and
-  * At the end, clearly say what you want the judge to do in your court case.
-  
-  ${ collapse_template(motion_body_help) }
-  
-  The motion has room for about 2,250 characters including spaces. If you need more room to explain, you can add a second page. You can preview it on the next screen.
+  The motion has room for about 500 characters including spaces. You will be able to explain more to the judge.
 fields:
-  - no label: motion_body
+  - I missed court because:: reasons
     input type: area
-    rows: 25
-    maxlength: 2250
----    
-template: motion_body_help
-subject: |
-  **Can I see an example?**
-content: |  
-  Let's say you want the judge to force, or compel, the other party in this case to respond to your discovery requests. You could write something like this:
-  
-    1. On January 10, 2023, I sent the Plaintiff, James Jones, a Request for Documents. 
-    2. I did not receive documents from the Plaintiff. On March 4, 2023, I asked Mr. James Jones to respond to the Request for Documents.
-    3. As of March 23, 2023, I still did not get a response from the Plaintiff.
-    4. I want the court to compel Plaintiff James Jones to respond to the Request for Documents by April 15, 2023.
+    rows: 7
+    maxlength: 500
 ---
-id: preview motion
-continue button field: preview_motion
+id: date learned of judgment
 question: |
-  Motion preview
-subquestion: |
-  Click the below image to preview your Motion.
-  
-  If this looks good, click **Next**.
-  
-  If you want to make changes, click **Back** or go to the [**Motion details**](${ url_action('section_motion') }) section.
-  
-  If you want to add another page, you can enter more text.
-  
-  **Note: this is not a complete form.** Finish the program to get all your forms.
-
-  ${ motion_attachment.as_pdf(key='preview').extract_pages(last=1) }
----
-id: add additional motion page
-question: |
-  Do you want to add a second page to your motion?
-subquestion: |
-  You will be able to preview the Motion during the program and at the end.
+  When did you learn about the default judgment?
 fields:
-  - no label: motion_additional_page
-    datatype: yesnoradio
+  - Date you learned about default judgment: date_learned
+    datatype: ThreePartsDate
+    alMax: ${today()}
 ---
-id: additional motion body
+id: time of original court date
 question: |
-  More motion text
+  When were you supposed to attend court on ${ judgment_date }?
 subquestion: |
-  Enter the second page of your motion.
-
-  Tips:  
-  
-  * Start each statement with a number,   
-  * Explain why the judge should agree with what you are asking. Be sure to include facts and laws, if known, that support your motion, and
-  * At the end, clearly say what you want the judge to do in your court case.
-  
-  ${ collapse_template(motion_body_help) }
-
-  The additional motion page has room for about 4,500 characters including spaces. You can preview both pages of the motion on the next screen.
+  This time should be on your original court papers. It may also appear on the default judgment.
 fields:
-  - no label: additional_motion_body
-    input type: area
-    rows: 30
-    maxlength: 4500
----
-id: original court date
-question: |
-  When is the court date you want to reschedule?
-fields:
-  - Date: reschedule_date
-    datatype: date
-    #min: ${ today().format("yyyy-MM-dd") }
-  - Time: reschedule_time
+  - Time of original court date: judgment_time
     datatype: time
+    hide if: dont_know_judgment_time
+  - I don't know the time: dont_know_judgment_time
+    datatype: yesno    
+#validation code: |
+#  if dont_know_judgment_time:
+#    judgment_time = '' 
 ---
-id: short notice warning
-continue button field: short_notice
-question: |
-  % if motion_type == "Reschedule a court date":
-  Court date soon
-  % else:
-  Deadline soon
-  % endif
-subquestion: |
-  % if motion_type == "Reschedule a court date":
-  Since you have 7 days or fewer until the court date, you might not have enough time to notify all other parties in your case.
-  
-  You can still file the *Motion to Continue or Extend Time*, but the judge might not reschedule your court date. The judge’s clerk may be able to help you.
-  % else:
-  Since you have 7 days or fewer until the deadline, you might not have enough time to notify all other parties in your case.
-  
-  You can still file the *Motion to Continue or Extend Time*, but the judge might not extend the deadline. The judge’s clerk may be able to help you.
-  % endif
----
-id: within 30 days
-continue button field: within_30_days
-question: |
-  Within 30 days
-subquestion: |
-  % if party_label == "plaintiff" or party_label == "petitioner":
-    % if motion_type == "Reschedule a court date":
-    Since the ${ reschedule_date } court date already passed, the judge can decide whether to hear your *Motion to Continue or Extend Time*. You will need a good reason for why the judge should reschedule the court date.
-    % elif motion_type == "Extend a deadline":
-    Since the ${ current_deadline } deadline already passed, the judge can decide whether to hear your *Motion to Continue or Extend Time*. You will need a good reason for why the judge should extend the deadline.
-    % endif
-    
-    If your case was dismissed, you will need to file a motion asking the judge to vacate the dismissal **within 30 days of when it was dismissed**. This will re-open the case so you do not need to re-file it. Check with court clerk for the status of your case.
-  % else:
-    % if motion_type == "Reschedule a court date":
-    Since the ${ reschedule_date } court date already passed, the judge can decide whether to hear your *Motion to Continue or Extend Time*. You will need a good reason for why the judge should reschedule the court date.
-    % elif motion_type == "Extend a deadline":
-    Since the ${ current_deadline } deadline already passed, the judge can decide whether to hear your *Motion to Continue or Extend Time*. You will need a good reason for why the judge should extend the deadline.
-    % endif
-
-    If a judgment was entered against you, you can file a Motion to Vacate a Default Judgment **within 30 days of when the court order was entered.** Check with court clerk for the status of your case.
-    
-    To learn more, read ILAO's article about [**vacating a default judgment**](https://www.illinoislegalaid.org/node/32421).
-  % endif
-
----
-id: beyond 30 days
-continue button field: beyond_30_days
-question: |
-  More than 30 days
-subquestion: |
-  % if party_label == "plaintiff" or party_label == "petitioner":
-    % if motion_type == "Reschedule a court date":
-    Since the ${ reschedule_date } court date already passed, the judge might not hear your *Motion to Continue or Extend Time*. You will need a good reason for why the judge should reschedule the court date.
-    % elif motion_type == "Extend a deadline":
-    Since the ${ current_deadline } deadline already passed, the judge might not hear your *Motion to Continue or Extend Time*. You will need a good reason for why the judge should extend the deadline.
-    % endif
-    
-    Your case might have been dismissed. If that happened, you will need to re-file it. Check with court clerk for the status of your case.
-  % else:
-    % if motion_type == "Reschedule a court date":
-    Since the ${ reschedule_date } court date already passed, the judge might not hear your *Motion to Continue or Extend Time*. You will need a good reason for why the judge should reschedule the court date.
-    % elif motion_type == "Extend a deadline":
-    Since the ${ current_deadline } deadline already passed, the judge might not hear your *Motion to Continue or Extend Time*. You will need a good reason for why the judge should extend the deadline.
-    % endif
-
-    Your case might have ended, and a judgment might have been entered against you. Check with court clerk for the status of your case.
-    
-    To learn more, read ILAO's article about [**undoing a default judgment after 30 days have passed**](https://www.illinoislegalaid.org/node/32391).
-  % endif
----
-id: original court date reason
-question: |
-  Why is there a court date on ${ reschedule_date }?
-subquestion: |
-  Your court papers should tell you what is going to happen in court on that date.
-fields: 
-  - no label: court_date_reason
-    datatype: radio
-    choices:
-      - The judge will hear a motion.: Motion
-      - We will have a trial.: Trial
-      - We will give the judge a status update.: Status
-      - Something else or I'm not sure why there is a court date.: Something else
-  - Other reason for court date: court_date_other_desc
-    maxlength: 45
-    show if:
-      variable: court_date_reason
-      is: "Something else"
----
-id: continuance reason type
-question: |
-  Why do you need to reschedule the ${ reschedule_date } court date?
-fields: 
-  - no label: continue_reason_type
-    datatype: radio
-    choices:
-      - A witness I need for my case won't be available on that date.: Witness unavailable
-        help: |
-          Select this if you have not found the witness or if they are not available on ${ reschedule_date }. 
-      - A document I need for my case won't be available on that date.: Document unavailable
-      - Other evidence I need for my case won't be available on that date.: Evidence unavailable
-      - I need to reschedule for another reason.: Other
----
-id: continuance reason
-question: |
-  Why do you need to reschedule?
-subquestion: |
-  The *Motion to Continue or Extend Time* has room for about 650 characters including spaces. You can preview it on the next screen.
-fields:
-  - I need to reschedule because:: continue_reason_text
-    input type: area
-    rows: 15
-    maxlength: 650
-
----
-id: document description
-question: |
-  What is the document you need for court?
-subquestion: |
-  Give the name or a short description of the document. Try to be specific. For example, you can say:
-  
-  * A signed contract with a company,
-  * Cell phone records, or
-  * A letter to someone.
-  
-  You can explain what the document will help prove on another screen.
-fields:
-  - Name or description of document:: document_description
-    input type: area
-    rows: 2
-    maxlength: 80
----
-id: evidence description
-question: |
-  What is the evidence you need for court?
-subquestion: |
-  Describe the evidence. Try to be specific.
-  
-  You can explain what the evidence will help prove on another screen.
-fields:
-  - Description of the evidence:: evidence_description
-    input type: area
-    rows: 9
-    maxlength: 350
----
-id: unfinished task
-question: |
-  What do you need more time to do?
-subquestion: |
-  In a few words, explain what you need more time to do.
-  
-  On the next screens, you can explain:
-  
-  * The current deadline,
-  * The new deadline you want, and
-  * Why you need more time.
-fields:
-  - I need more time to:: unfinished_task
-    input type: area
-    rows: 2
-    maxlength: 70
----
-id: current deadline
-question: |
-  What is the **current** deadline?
-fields:
-  - Current deadline: current_deadline
-    datatype: date
-    #min: ${ today().format("yyyy-MM-dd") }
----
-id: new deadline
-question: |
-  What is the **new** deadline you want?
-fields:
-  - New deadline: new_deadline
-    datatype: date
-    min: ${ current_deadline.format("yyyy-MM-dd") }
----  
-id: extend time reason
-question: |
-  Why do you need until ${ new_deadline }?
-subquestion: |
-  Explain how the new deadline will let you "${ unfinished_task }" by ${ new_deadline }.
-
-  The *Motion to Continue or Extend Time* has room for about 800 characters including spaces. You can preview it on the next screen.
-fields:
-  - I need more time because: extension_reason
-    input type: area
-    rows: 15
-    maxlength: 800
+code: |
+  motion_body = ''
 ---
 id: your contact information
 question: |
@@ -1446,12 +1220,8 @@ code: |
   motion_order.enabled = True
   motion_single_pdf_bundle.enabled = True
   
-  notice_attachment.enabled = False
-  notice_single_pdf_bundle.enabled = False
-
-  if anyone_opposing == True or users.number() > 1:
-    notice_single_pdf_bundle.enabled = True
-    notice_attachment.enabled = True
+  notice_single_pdf_bundle.enabled = True
+  notice_attachment.enabled = True
 ---
 objects:
   - al_user_bundle: ALDocumentBundle.using(elements=[motion_instructions, motion_single_pdf_bundle, notice_single_pdf_bundle, motion_order], filename="motion.pdf", title="All forms")
@@ -1504,7 +1274,7 @@ attachment:
           % if in_re_check:
           ${ "" }
           % else:
-          ${list_defendants(users.full_names(), other_parties.full_names(), anyone_opposing, party_label)}
+          ${users.full_names()}
           % endif
 
       - "preview_watermark": ${ '' }
@@ -1527,7 +1297,7 @@ attachment:
       - "motion_by_defendant": ${ party_label == "defendant" or party_label == "respondent" }
       - "motion_summary": ${ motion_summary }
       - "motion_body": ${ motion_body }
-      - "additional_motion_cb": ${ True if motion_additional_page else '' }
+      - "additional_motion_cb": ${ False }
       
       - "delivery_party1_name_full": | 
           % if delivery_parties[0].is_represented:
@@ -1676,7 +1446,7 @@ attachment:
           % if in_re_check:
           ${ "" }
           % else:
-          ${list_defendants(users.full_names(), other_parties.full_names(), anyone_opposing, party_label)}
+          ${users.full_names()}
           % endif
       - "user__1": ${ users[0].name.full(middle="full") }
       - "user__2": ${ users[0].name.full(middle="full") }
@@ -1791,7 +1561,7 @@ attachment:
           % if in_re_check:
           ${ "" }
           % else:
-          ${list_defendants(users.full_names(), other_parties.full_names(), anyone_opposing, party_label)}
+          ${users.full_names()}
           % endif
       - "case_number__1": ${ case_number }
       - "motion_by_plaintiff": ${ party_label == "plaintiff" or party_label == "petitioner" }
@@ -1818,16 +1588,6 @@ review:
       % for my_var in users:
         * ${ my_var.name.full(middle="full") }
       % endfor
-  - Edit: anyone_opposing
-    button: |
-      % if party_label == "plaintiff":
-      **Any defendants?**
-      ${word(yesno(anyone_opposing))}
-      % else:
-      **Any respondents?**
-      ${word(yesno(anyone_opposing))}
-      % endif
-    show if: (party_label == 'plaintiff' or party_label == 'petitioner')
   - Edit: other_parties.revisit
     button: |
       **The other party: (Edit to change name, lawyer, address, and delivery info)**
@@ -1891,27 +1651,6 @@ review:
       **Motion text:**
       ${ motion_body }
     show if: motion_type == "Something else"
-  - Edit: motion_additional_page
-    button: |
-      **Do you want to add a second page to your motion?**  
-      ${word(yesno(motion_additional_page))}
-    show if: motion_type == "Something else"
-  - Edit: additional_motion_body
-    button: |
-      **Additional motion text:**
-      ${ additional_motion_body }
-    show if: (motion_additional_page and motion_type == "Something else")
-  - Edit: reschedule_date
-    button: |
-      **Original court date on:**
-      ${ reschedule_date } at ${ format_time(reschedule_time, "h:mm a") }
-    show if: motion_type == "Reschedule a court date"
-  - Edit: court_date_reason
-    button: |
-      **Original court date reason:**
-      ${ court_date_reason }
-    show if: motion_type == "Reschedule a court date"
-    
 
   - Edit: unfinished_task
     button: |
@@ -2136,16 +1875,6 @@ review:
       % for my_var in users:
         * ${ my_var.name.full(middle="full") }
       % endfor
-  - Edit: anyone_opposing
-    button: |
-      % if party_label == "plaintiff":
-      **Any defendants?**
-      ${word(yesno(anyone_opposing))}
-      % else:
-      **Any respondents?**
-      ${word(yesno(anyone_opposing))}
-      % endif
-    show if: (party_label == 'plaintiff' or party_label == 'petitioner')
   - Edit: other_parties.revisit
     button: |
       **The other party: (Edit to change name, lawyer, address, and delivery info)**
@@ -2218,40 +1947,8 @@ review:
       **Motion text:**
       ${ motion_body }
     show if: motion_type == "Something else"
-  - Edit: motion_additional_page
-    button: |
-      **Do you want to add a second page to your motion?**  
-      ${word(yesno(motion_additional_page))}
-    show if: motion_type == "Something else"
-  - Edit: additional_motion_body
-    button: |
-      **Additional motion text:**
-      ${ additional_motion_body }
-    show if: (motion_additional_page and motion_type == "Something else")
-  - Edit: reschedule_date
-    button: |
-      **Original court date on:**
-      ${ reschedule_date } at ${ format_time(reschedule_time, "h:mm a") }
-    show if: motion_type == "Reschedule a court date"
-  - Edit: court_date_reason
-    button: |
-      **Original court date reason:**
-      ${ court_date_reason }
-    show if: motion_type == "Reschedule a court date"
-    
-  - Edit: continue_reason_type
-    button: |
-      **Reschedule for witness, document, evidence, or other:**
-      ${ continue_reason_type }
-    show if: (motion_type == "Reschedule a court date")
-  - Edit: continue_reason_text
-    button: |
-      **You need to reschedule because:**
-      ${ continue_reason_text }
-    show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Other")
-
    
-    
+  
   - Edit: unfinished_task
     button: |
       **What you need more time to do:**
