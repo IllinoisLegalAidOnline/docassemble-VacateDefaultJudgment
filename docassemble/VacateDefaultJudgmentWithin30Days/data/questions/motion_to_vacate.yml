@@ -76,8 +76,9 @@ code: |
   reasons
   date_learned
   judgment_time
+  trial_with
   motion_body
-
+  debug_motion_body
   
   set_progress(55)
   nav.set_section('section_delivery')
@@ -247,10 +248,10 @@ subquestion: |
   ${ collapse_template(which_party) }  
 field: party_label
 choices:
-  - Plaintiff: plaintiff
-  - Petitioner: petitioner
   - Defendant: defendant
   - Respondent: respondent
+  - Plaintiff: plaintiff
+  - Petitioner: petitioner
 ---
 template: which_party
 subject: |
@@ -291,7 +292,7 @@ template: other_users_help
 subject: |
   **Learn about other ${ party_label }s**
 content: |  
-  You said you are the ${ party_label.capitalize() }. The other people on your side of the case would be co-${ party_label}s.
+  You said you are the ${ party_label }. The other people on your side of the case would be co-${ party_label}s.
   
   The other ${ party_label}s should be listed with you at the top of your court papers.
 ---
@@ -439,58 +440,6 @@ content: |
   In this example, the case number is **2022 EXAMPLE 123**.
   
   [FILE case_number_example.png, 100%, Summons form showing case number]
----  
-id: motion type
-question: |
-  Why are you filing a motion?
-fields: 
-  - no label: motion_type
-    datatype: radio
-    choices:
-      - I want to reschedule a court date that was already scheduled.: Reschedule a court date
-        help: |
-          Examples include:
-    
-          * You will need to miss a court date due to a family medical emergency.
-          * You need more time to find a **witness** that you need for your case.
-          * The **evidence** you need for your case won't be available on the scheduled court date.      
-      - I want to extend the deadline to do something.: Extend a deadline  
-        help: |
-          Examples include:
-    
-          * You need more time to file an Answer in your court case.
-          * You need more time to respond to something the other party filed in your case.      
-      - I want the judge to do something else in my court case.: Something else  
-        help: |
-          Examples include:
-          
-          * You want the judge to order the other party to answer your discovery requests, also called a **Motion to Compel Discovery**. 
-          * You want to change something you already filed in this case, also called a **Motion to Amend**.
-          * You want the judge to dismiss a case against you because it has no basis in law or fact, also called a **Motion to Dismiss**.
- 
----  
-id: motion title
-question: |
-  Motion title
-subquestion: |
-  In a few words, explain what you want the judge to do in this court case. The motion form has room for about 70 characters including spaces.
-  
-  ${ collapse_template(motion_title_help) }
-
-fields:
-  - Motion to:: motion_summary
-    maxlength: 70
----    
-template: motion_title_help
-subject: |
-  **Can I see some examples?**
-content: |  
-  Examples include:
-  
-    * If you want the judge to order the other party to answer your discovery requests, you could ask to: Compel Discovery. 
-    * If you want to change something you already filed in this case, you could ask to: Amend the document.
-    * If you want the judge to dismiss a case against you because it has no basis in law or fact, you could ask to: Dismiss the case.
-
 ---
 id: reasons for missing court date
 question: |
@@ -498,11 +447,11 @@ question: |
 subquestion: |
   Some people miss court because of a family or medical emergency. Sometimes they don't know about the court date because court papers did not arrive in time or were confusing.
   
-  The motion has room for about 500 characters including spaces. You will be able to explain more to the judge.
+  The motion has room for about 500 characters including spaces. You will be able to explain more to the judge at the court hearing.
 fields:
   - I missed court because:: reasons
     input type: area
-    rows: 7
+    rows: 11
     maxlength: 500
 ---
 id: date learned of judgment
@@ -511,11 +460,12 @@ question: |
 fields:
   - Date you learned about default judgment: date_learned
     datatype: ThreePartsDate
+    alMin: ${judgment_date}
     alMax: ${today()}
 ---
 id: time of original court date
 question: |
-  When were you supposed to attend court on ${ judgment_date }?
+  At what time were you supposed to attend court on ${ judgment_date }?
 subquestion: |
   This time should be on your original court papers. It may also appear on the default judgment.
 fields:
@@ -524,12 +474,83 @@ fields:
     hide if: dont_know_judgment_time
   - I don't know the time: dont_know_judgment_time
     datatype: yesno    
-#validation code: |
-#  if dont_know_judgment_time:
-#    judgment_time = '' 
+validation code: |
+  if dont_know_judgment_time:
+    judgment_time = '' 
 ---
+id: jury demand
+question: |
+  Who do you want to decide your case?
+subquestion: |
+  In your motion, you can ask the judge to let you file a *Jury Request*. You will need to ask for this since the time to make the request for a jury has expired. However, the judge can restore this option.
+  
+  **Note:** You do not have a right to a jury trial in every case. There can be an additional fee for a jury trial if you are not filing a fee waiver.
+  
+  To learn more, read ILAO's article about [**jury trials and judge trials**](https://www.illinoislegalaid.org/node/178441).
+fields:
+  - no label: trial_with
+    datatype: radio
+    choices:
+      - A judge: judge_only
+      - A judge and a jury: judge_and_jury
+---
+depends on:
+  - users[0].name
+  - judgment_date
+  - date_learned
+  - reasons
+  - judgment_time
+  - dont_know_judgment_time
+  - trial_with
 code: |
-  motion_body = ''
+  motion_body = "Vacate the default judgment in this case, pursuant to 735 ILCS 5/2-1301. In support of this motion, I state as follows: \n \n"
+
+  motion_body += "1. This motion is filed within 30 days of the default judgment of " + judgment_date + ".\n \n"
+
+  if dont_know_judgment_time == False:
+    motion_body += "2. On " + judgment_date + ", my case was set to be heard at " + format_time(judgment_time) + ". I did not appear at the hearing on that date and time because: " + reasons 
+  else:
+    motion_body += "2. On " + judgment_date + ", my case was set to be heard. I did not appear at the hearing on that date because: " + reasons
+
+  motion_body += "\n \n3.	I learned of the default judgment on " + judgment_date + ".\n \n"
+
+  additional_motion_body = "4. I filed this motion as soon as possible after learning of the default.\n \n"
+
+  additional_motion_body += "5. This matter was not decided on the merits, and I request an opportunity to be heard. \n \n"
+  
+  additional_motion_body += "6. I have at all times tried my best to defend my case and preserve my rights. \n \n"
+
+  additional_motion_body += "7. In this case, justice will be served only by vacating the default judgment entered against me and allowing the case to proceed to trial on its merits. \n \n"
+
+  if trial_with == "judge_only":
+    additional_motion_body += "WHEREFORE, I ask that this court vacate the default judgment of " + judgment_date + ", stay all proceedings, and grant me leave to file an Appearance at this time."
+  else:
+    additional_motion_body += "WHEREFORE, I ask that this court vacate the default judgment of " + judgment_date + ", stay all proceedings, and grant me leave to file an Appearance and Jury Demand at this time."
+
+  
+#  motion_body += "4. " + party_label.capitalize() + " filed this motion as soon as possible after learning of the default.\n \n"
+#
+#  motion_body += "5. This matter was not decided on the merits, and " + party_label.capitalize() + " requests an opportunity to be heard. \n \n"
+#  
+#  motion_body += "6. " + party_label.capitalize() + " has at all times tried their best to defend their case and preserve their rights. \n \n"
+#
+#  motion_body += "7. In this case, justice will be served only by vacating the default judgment entered against " + party_label.capitalize() + " and allowing the case to proceed to trial on its merits. \n \n"
+#
+#  if trial_with == "judge_only":
+#    motion_body += "WHEREFORE, " + party_label.capitalize() + " asks that this court vacate the default judgment of " + judgment_date + ", stay all proceedings, and grant " + party_label.capitalize() + " leave to file an Appearance at this time."
+#  else:
+#    motion_body += "WHEREFORE, " + party_label.capitalize() + " asks that this court vacate the default judgment of " + judgment_date + ", stay all proceedings, and grant " + party_label.capitalize() + " leave to file an Appearance and Jury Request at this time."
+
+---
+id: debug motion body
+continue button field: debug_motion_body
+question: |
+  Motion text
+subquestion: |
+  So far, the motion body looks like this:
+
+  ${ motion_attachment.as_pdf(key='preview').extract_pages(last=2) }
+
 ---
 id: your contact information
 question: |
@@ -579,44 +600,21 @@ content: |
 ---
 id: e-signature
 question: |
-  % if motion_type == "Something else":
   Do you want to add your e-signature to your ${ form_name }?
-  % else:
-  Do you want to add your e-signature to your Motion to Continue or Extend Time?
-  % endif
 subquestion: |
   This program can put “**/s/ ${users[0].name.full(middle='full')}**” where you would sign your name. The court will accept this as your signature.
 
   If you do not add your **{e-signature}** now, you must sign your paper forms before you file and deliver them.
 
-  % if motion_type == "Something else":
   <div class="alert alert-info ilao-info" role="alert">
     <h6 class="alert-heading">What it means to sign your forms</h6>
-    <p>By signing your <i>Motion</i>, you are certifying that:</p>
+    <p>By signing your <i>Motion</i> and <i>Notice of Court Date for Motion</i>, you are certifying that:</p>
     <p><ul>
       <li>Everything on the forms is true and correct, and</li>
       <li>You understand that making a false statement on the form is perjury, which can result in criminal penalties.</li>
     </ul></p>
   <p>See the <a href="https://www.ilga.gov/legislation/ilcs/documents/073500050k1-109.htm"><b>Code of Civil Procedure, 735 ILCS 5/1-109</b></a> for more information.</p>
   </div>
-  % else:
-  <div class="alert alert-info ilao-info" role="alert">
-    <h6 class="alert-heading">What it means to sign your forms</h6>
-    <p>By signing your <i>Motion to Continue or Extend Time</i>, you are certifying that:</p>
-    <p><ul>
-      <li>You read the document,</li>
-      <li>You believe it to be true and correct, and</li>
-      <li>You are not filing it for an improper purpose.</li>
-    </ul></p>
-    <p>See the <a href="https://ilcourtsaudio.blob.core.windows.net/antilles-resources/resources/9ce1fce9-895f-463e-b87d-f9b7631f8fde/Rule%20137.pdf"><b>Illinois Supreme Court Rule 137</b></a> for more information.</p>
-    <p>By signing the Proof of Delivery section of your <i>Motion to Continue or Extend Time</i>, you are certifying that:</p>
-    <p><ul>
-      <li>Everything on the forms is true and correct, and</li>
-      <li>You understand that making a false statement on the form is perjury, which can result in criminal penalties.</li>
-    </ul></p>
-  <p>See the <a href="https://www.ilga.gov/legislation/ilcs/documents/073500050k1-109.htm"><b>Code of Civil Procedure, 735 ILCS 5/1-109</b></a> for more information.</p>
-  </div>
-  % endif
 fields:
   - "Add e-signature?": e_signature
     datatype: yesnoradio
@@ -1174,6 +1172,7 @@ content: |
 objects:
   - motion_instructions: ALDocument.using(title="Instructions", filename="instructions.pdf", has_addendum=False)
   - motion_attachment: ALDocument.using(title="Motion", filename="motion.pdf", has_addendum=False)
+  - additional_motion_attachment: ALDocument.using(title="Additional Page for Motion", filename="additional_motion.pdf", has_addendum=False)
   - motion_order: ALDocument.using(title="Order", filename="order.pdf", has_addendum=False)
   - notice_attachment: ALDocument.using(title="Notice of Court Date for Motion", filename="notice_of_court_date.pdf", has_addendum=False)
 ---
@@ -1249,7 +1248,7 @@ attachment:
   filename: motion
   skip undefined: True
   editable: False
-  pdf template file: motion.pdf
+  pdf template file: motion_plus_additional.pdf
   fields:
       - "trial_court_county": ${ trial_court.address.county }
       - "plaintiffs": |
@@ -1291,13 +1290,15 @@ attachment:
       - "case_number__2": ${ case_number }
       - "case_number__3": ${ case_number }
       - "case_number__4": ${ case_number }
+      - "case_number__5": ${ case_number }
       - "e_sign_name__1": ${ users[0].name.full(middle="full") if e_signature else '' }
       - "e_sign_name__2": ${ users[0].name.full(middle="full") if e_signature else '' }
       - "motion_by_plaintiff": ${ party_label == "plaintiff" or party_label == "petitioner" }
       - "motion_by_defendant": ${ party_label == "defendant" or party_label == "respondent" }
-      - "motion_summary": ${ motion_summary }
+      - "motion_summary": ${ "Vacate Default Judgment" }
       - "motion_body": ${ motion_body }
-      - "additional_motion_cb": ${ False }
+      - "additional_motion_cb": ${ True }
+      - "additional_motion_body": ${ additional_motion_body }      
       
       - "delivery_party1_name_full": | 
           % if delivery_parties[0].is_represented:
@@ -1348,7 +1349,6 @@ attachment:
       - "delivery_party2_jail_name": ${ delivery_parties[1].delivery_jail_name if delivery_parties[1].knows_delivery_method and delivery_parties[1].jail_delivery else '' }
 
       - "is_additional_proof_delivery_yes": ${ delivery_parties.number() > 2 }
-      
 ---
 generic object: ALIndividual
 attachment:
@@ -1463,7 +1463,7 @@ attachment:
       - "case_number__4": ${ case_number }
       - "e_sign_name__1": ${ users[0].name.full(middle="full") if e_signature else '' }
       - "e_sign_name__2": ${ users[0].name.full(middle="full") if e_signature else '' }
-      - "motion_summary": ${ motion_summary if motion_type == "Something else" else "Continue (Reschedule) or Extend Time" }
+      - "motion_summary": ${ "Vacate Default Judgment" }
 
       - "hearing_date": ${ hearing_date if (defined('hearing_date') and has_court_date) else '' }
       - "hearing_time": ${ format_time(hearing_time, format='h:mm') if (defined('hearing_time') and has_court_date) else '' }
@@ -1566,7 +1566,7 @@ attachment:
       - "case_number__1": ${ case_number }
       - "motion_by_plaintiff": ${ party_label == "plaintiff" or party_label == "petitioner" }
       - "motion_by_defendant": ${ party_label == "defendant" or party_label == "respondent" }
-      - "motion_summary": ${ motion_summary }
+      - "motion_summary": ${ "Vacate Default Judgment" }
 ---
 ---
 ############### Review page
@@ -1637,41 +1637,31 @@ review:
     button: |
       **Case number:**
       ${ case_number }   
-  - Edit: motion_type
+  - Edit: judgment_date
     button: |
-      **Reason for motion:**
-      ${ motion_type }
-  - Edit: motion_summary
+      **When was a default judgment entered against you?**
+      ${ judgment_date }
+  - Edit: date_learned
     button: |
-      **Motion title:**
-      ${ motion_summary }
-    show if: motion_type == "Something else"
-  - Edit: motion_body
+      **When did you learn about the default judgment?**
+      ${ date_learned }
+  - Edit: reasons
     button: |
-      **Motion text:**
-      ${ motion_body }
-    show if: motion_type == "Something else"
+      **Why you missed court:**
+      ${ reasons }
 
-  - Edit: unfinished_task
+  - Edit: judgment_time
     button: |
-      **What you need more time to do:**
-      ${ unfinished_task }
-    show if: motion_type == "Extend a deadline"    
-  - Edit: current_deadline
+      **At what time were you supposed to attend court on ${ judgment_date }?**
+      ${ format_time(judgment_time) }
+  - Edit: trial_with
     button: |
-      **Current deadline:**
-      ${ current_deadline }
-    show if: motion_type == "Extend a deadline"    
-  - Edit: new_deadline
-    button: |
-      **New deadline:**
-      ${ new_deadline }
-    show if: motion_type == "Extend a deadline"    
-  - Edit: extension_reason
-    button: |
-      **You need more time because:**
-      ${ extension_reason }
-    show if: motion_type == "Extend a deadline"        
+      **If the case goes to trial, you would like it decided by:**
+      % if trial_with == "judge_only":
+      a judge
+      % else:
+      a judge and a jury
+      % endif
   - Edit: e_signature
     button: |
       **Do you want to add your e-signature to your forms?**
@@ -1933,42 +1923,31 @@ question: |
 subquestion: |
   Edit your answers below.
 review:
-  - Edit: motion_type
+  - Edit: judgment_date
     button: |
-      **Reason for motion:**
-      ${ motion_type }
-  - Edit: motion_summary
+      **When was a default judgment entered against you?**
+      ${ judgment_date }
+  - Edit: date_learned
     button: |
-      **Motion title:**
-      ${ motion_summary }
-    show if: motion_type == "Something else"
-  - Edit: motion_body
+      **When did you learn about the default judgment?**
+      ${ date_learned }
+  - Edit: reasons
     button: |
-      **Motion text:**
-      ${ motion_body }
-    show if: motion_type == "Something else"
-   
-  
-  - Edit: unfinished_task
+      **Why you missed court:**
+      ${ reasons }
+
+  - Edit: judgment_time
     button: |
-      **What you need more time to do:**
-      ${ unfinished_task }
-    show if: motion_type == "Extend a deadline"    
-  - Edit: current_deadline
+      **At what time were you supposed to attend court on ${ judgment_date }?**
+      ${ format_time(judgment_time) }
+  - Edit: trial_with
     button: |
-      **Current deadline:**
-      ${ current_deadline }
-    show if: motion_type == "Extend a deadline"    
-  - Edit: new_deadline
-    button: |
-      **New deadline:**
-      ${ new_deadline }
-    show if: motion_type == "Extend a deadline"    
-  - Edit: extension_reason
-    button: |
-      **You need more time because:**
-      ${ extension_reason }
-    show if: motion_type == "Extend a deadline"        
+      **If the case goes to trial, you would like it decided by:**
+      % if trial_with == "judge_only":
+      a judge
+      % else:
+      a judge and a jury
+      % endif
   - Edit: e_signature
     button: |
       **Do you want to add your e-signature to your forms?**
