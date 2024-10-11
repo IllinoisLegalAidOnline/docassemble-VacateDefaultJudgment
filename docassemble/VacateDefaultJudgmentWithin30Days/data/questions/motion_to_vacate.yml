@@ -46,9 +46,10 @@ code: |
   sees_nav_bar
   snapshot_start
   how_to_use
+  default_info
   set_progress(5)
-  whats_next
   accept_terms
+  whats_next
   if default_judgment == False:
     must_be_default_judgment
   
@@ -159,7 +160,8 @@ subquestion: |
   To use this program you will need to know: UPDATE THIS
 
   * Your court case information, 
-  * What you want the court to do,
+  * The date and time of your court hearing when the default judgment was entered,
+  * Why you missed court when the default judgment was entered,
   * Names and addresses of the other parties, and 
   * Names and addresses of the other parties’ lawyers, if any. 
 
@@ -177,12 +179,34 @@ subject: |
 content: |  
   This is an example of help. Click again to hide.
 ---
+id: default info
+continue button field: default_info
+question: |
+  Some definitions
+subquestion: |
+  UPDATE THIS
+  
+  When someone sues you, you have to tell the judge if you want to participate in the court case. If you don't, the judge can find you in default.
+  
+  If you are in default, then whatever the Plaintiff or Petitioner says in their lawsuit can be used to give them what they want. This often results in a Default Judgment.
+  
+  In Illinois, you can ask that a Default Judgment be vacated within 30 days if:
+
+  * Requirement 1
+  * Requirement 2
+
+  This program will help you make the court forms to ask the court to undo the judgment so you can participate in the court case.
+
+  If your motion is granted, you should be able to file an *Appearance* and *Jury Request*, if you want.
+
+  Read ILAO's article on X, to learn more.
+---
 id: whats next
 continue button field: whats_next
 question: |
   After you finish this program
 subquestion: |
-  After you download your Motion, you must file it with the court. This program does not file your ${ form_name } for you.
+  After you download your *Motion* and *Notice of Court Date for Motion*, you must file them with the court. This program does not file your forms for you.
   
   You may need to schedule a court date for when the judge will hear your motion. The scheduling process is different depending on your location and case type. Check with your local circuit clerk for how to schedule a motion hearing.
   
