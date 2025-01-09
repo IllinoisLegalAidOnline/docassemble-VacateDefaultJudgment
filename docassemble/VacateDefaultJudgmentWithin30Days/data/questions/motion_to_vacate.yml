@@ -167,15 +167,15 @@ subquestion: |
 
   You can find most of this information on other court papers you have about this case. 
 
-  Set aside 10 to 15 minutes to finish this program. You can log in and save your work to return to later. 
+  Set aside 10 to 15 minutes to finish this program. You can log in and save your work to continue later. 
  
   ${ collapse_template(help_example) }  
 
-  Click on **{green words}** to learn what they mean. Some questions have a question mark in a circle ${ fa_icon("question-circle", color_css="#0dcaf0" ) } that also gives help.
+  Click on **{green words}** to learn what they mean. Some pages have a question mark in a circle ${ fa_icon("question-circle", color_css="#0dcaf0" ) } that helps explain things.
 ---
 template: help_example
 subject: |
-  **You can expand sections like this to show more information.**
+  **You can click sections like this to show more information.**
 content: |  
   This is an example of help. Click again to hide.
 ---
@@ -338,12 +338,7 @@ sets:
   - users[i].name.first
 id: other users names
 question: |
-  % if al_form_type in ['starts_case','existing_case','appeal']:
   What is the name of the ${ ordinal(i - 1 ) } other person who is part of the case with you?
-  % else:
-  What is the name of the ${ ordinal(i - 1 ) } other person who is adding their name to
-  this form with you?
-  % endif
 subquestion: |
   ${ collapse_template(long_name_help) }
 fields:
@@ -433,7 +428,9 @@ subquestion: |
   For example, the case could be called "In re: The Will of Elena Black."
 fields:
   - In re:: in_re_label
-    maxlength: 50
+    input type: area
+    rows: 2
+    maxlength: 60
 ---
 depends on:
   - trial_court_index
@@ -475,7 +472,7 @@ subquestion: |
 fields:
   - I missed court because:: reasons
     input type: area
-    rows: 11
+    rows: 12
     maxlength: 500
 ---
 id: date learned of judgment
@@ -632,12 +629,19 @@ subquestion: |
 
   <div class="alert alert-info ilao-info" role="alert">
     <h6 class="alert-heading">What it means to sign your forms</h6>
-    <p>By signing your <i>Motion</i> and <i>Notice of Court Date for Motion</i>, you are certifying that:</p>
+    <p>By signing the <i>Motion</i> and Proof of Delivery section of your forms, you are certifying that:</p>
     <p><ul>
-      <li>Everything on the forms is true and correct, and</li>
-      <li>You understand that making a false statement on the form is perjury, which can result in criminal penalties.</li>
+      <li>Everything on the forms is true and correct, or you have been informed or you believe it is true and correct, and</li>
+      <li>You understand that making a false statement on the forms is perjury and has penalties provided by law.</li>
     </ul></p>
   <p>See the <a href="https://www.ilga.gov/legislation/ilcs/documents/073500050k1-109.htm"><b>Code of Civil Procedure, 735 ILCS 5/1-109</b></a> for more information.</p>
+    <p>By signing the <i>Notice of Court Date for Motion</i> form, you are certifying that:</p>
+    <p><ul>
+      <li>You read the document,</li>
+      <li>You believe it is true and correct, and</li>
+      <li>You are not filing it to cause delay or for another bad reason.</li>
+    </ul></p>
+    <p>See the <a href="https://ilcourtsaudio.blob.core.windows.net/antilles-resources/resources/9ce1fce9-895f-463e-b87d-f9b7631f8fde/Rule%20137.pdf"><b>Illinois Supreme Court Rule 137</b></a> for more information.</p>
   </div>
 fields:
   - "Add e-signature?": e_signature
@@ -795,7 +799,7 @@ code: |
 id: delivery intro
 continue button field: delivery_intro
 question: |
-  Send your ${ form_name } to all other parties
+  Send your forms to all other parties
 subquestion: |
   These are the other parties in this case: ${comma_and_list(delivery_parties)}.
 
@@ -909,7 +913,7 @@ content: |
   * US mail or a delivery company (like UPS or FedEx), or
   * Hand delivery to the party, the party's family member over 13 at their residence, the party's lawyer, or their lawyer's office.
 
-  If you have an email address, and the other party listed an email address on the court documents, you must send the forms to them by email or through the e-filing system. You may use US mail or a delivery company, or hand delivery if you or the other party **does not** have an email address.
+  If you have an email address, and the other party listed an email address on the court documents, you must send the forms to them by email or through the e-filing system. You may use US mail, a delivery company, or hand delivery if you or the other party **does not** have an email address.
   
   If you are in a prison or jail, you can deliver by mail.
 terms:
@@ -1161,7 +1165,7 @@ subquestion: |
   
   Your forms are ready. View and download your forms below. Click **Make changes** to fix any mistakes.
 
-  This program does not file your Motion with the court or deliver it to other parties in your case. You will need to do this yourself. Learn about [**e-filing in Illinois**](https://www.illinoiscourts.gov/eservices/information-for-filers-without-lawyers).
+  This program does not file your *Motion* with the court or deliver it to other parties in your case. You will need to do this yourself. Learn about [**e-filing in Illinois**](https://www.illinoiscourts.gov/eservices/information-for-filers-without-lawyers).
 
   ${ action_button_html(url_action('review_answers'), label=':edit: Make changes', color='success', size="md") }
   
@@ -1171,7 +1175,7 @@ subquestion: |
 
   ${ al_user_bundle.send_button_html(show_editable_checkbox=False) }
 
-  **Note:** This program does not file your Motion with the court or deliver it to other parties in your case. Learn about [**e-filing in Illinois**](https://www.illinoiscourts.gov/eservices/information-for-filers-without-lawyers).
+  **Note:** This program does not file your *Motion* with the court or deliver it to other parties in your case. Learn about [**e-filing in Illinois**](https://www.illinoiscourts.gov/eservices/information-for-filers-without-lawyers).
   
   Thank you for using ILAO Easy Forms!
 under: |
@@ -1247,9 +1251,8 @@ code: |
   notice_attachment.enabled = True
 ---
 objects:
-  - al_user_bundle: ALDocumentBundle.using(elements=[motion_instructions, motion_single_pdf_bundle, notice_single_pdf_bundle, motion_order], filename="motion.pdf", title="All forms")
-  - al_court_bundle: ALDocumentBundle.using(elements=[motion_single_pdf_bundle, notice_single_pdf_bundle, motion_order, ], filename="motion.pdf", title="Motion")
-
+  - al_user_bundle: ALDocumentBundle.using(elements=[motion_instructions, motion_single_pdf_bundle, notice_single_pdf_bundle, motion_order], filename="motion_to_vacate.pdf", title="All forms")
+  - al_court_bundle: ALDocumentBundle.using(elements=[motion_single_pdf_bundle, notice_single_pdf_bundle, motion_order, ], filename="motion_to_vacate.pdf", title="Motion")
 ---
 objects:
   - motion_single_pdf_bundle: ALDocumentBundle.using(elements=[motion_attachment, additional_delivery_bundle], filename="motion.pdf", title="Motion")
