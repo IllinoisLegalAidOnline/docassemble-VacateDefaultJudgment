@@ -43,8 +43,8 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
                 out.setdefault(package, []).append(prefix+name)
     return out
 
-setup(name='docassemble.VacateDefaultJudgmentWithin30Days',
-      version='0.1.2',
+setup(name='docassemble.VacateDefaultJudgment',
+      version='0.2.0',
       description=('A docassemble extension.'),
       long_description='# docassemble.Motion\r\n\r\nA docassemble extension.\r\n\r\n## Author\r\n\r\nMatt Newsted, mnewsted@illinoislegalaid.org\r\n\r\n',
       long_description_content_type='text/markdown',
@@ -55,6 +55,6 @@ setup(name='docassemble.VacateDefaultJudgmentWithin30Days',
       packages=find_namespace_packages(),
       install_requires=['docassemble.AssemblyLine>=3.2.0', 'docassemble.ILAO>=1.0.99'],
       zip_safe=False,
-      package_data=find_package_data(where='docassemble/VacateDefaultJudgmentWithin30Days/', package='docassemble.VacateDefaultJudgmentWithin30Days'),
+      package_data=find_package_data(where='docassemble/VacateDefaultJudgment/', package='docassemble.VacateDefaultJudgment'),
      )
 
