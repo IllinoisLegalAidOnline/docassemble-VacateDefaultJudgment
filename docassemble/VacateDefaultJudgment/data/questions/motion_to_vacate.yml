@@ -160,10 +160,10 @@ subquestion: |
   To use this program you will need to know:
 
   * Your court case information, including the county and case number,
-  * The date and time of your court hearing when the default judgment was entered,
-  * Why you missed court when the default judgment was entered,
+  * The date when the default judgment was entered against you,
+  * Why you missed the court date,
   * Names and addresses of the other parties, and 
-  * Names and addresses of the other parties’ lawyers, if any. 
+  * Names and addresses of the other parties' lawyers, if any. 
 
   You can find most of this information on other court papers you have about this case. 
 
@@ -184,9 +184,9 @@ continue button field: default_info
 question: |
   Default judgment information
 subquestion: |
-  When you are sued, you have to tell the court if you want to participate in the case. If you don't participate or go to court, the judge can decide the case against you. This is called being "in default." The order against you is called a **default judgment**.
+  When you are sued, you have to tell the court if you want to participate in the case. If you don't respond or go to court, the judge can decide the case against you. This is called being "in default." The order against you is called a **default judgment**.
   
-  This program will help you make a Motion to Vacate Default Judgment that asks the court to undo the default judgment so you can participate in the court case. The motion needs to be filed within 30 days of the judgment. If you file after 30 days, it becomes much harder to undo the judgment.
+  This program will help you make a Motion to Vacate Default Judgment that asks the judge to undo the default judgment so you can participate in the court case. You must file the motion within 30 days of the judgment. If you file after 30 days, it becomes much harder to undo the judgment.
 
   To learn more, read ILAO's article about [**vacating a default judgment**](https://www.illinoislegalaid.org/node/32421).
 ---
@@ -195,9 +195,9 @@ continue button field: whats_next
 question: |
   After you finish this program
 subquestion: |
-  After you download your forms, you must file them with the court. This program does not file your forms for you.
+  After you download your forms, you must file them with the court. This program **does not file** your forms for you.
   
-  You may need to schedule a court date for when the judge will hear your motion. The scheduling process is different depending on your location and case type. Check with your local circuit clerk for how to schedule a motion hearing.
+  You may need to schedule a court date for the judge to review your motion. The scheduling process is different depending on your location and case type. Check with your local circuit clerk for how to schedule a motion hearing.
   
   Finally, you will need to send your forms to other parties in your case. The instructions you can download at the end of this program explain how to do this. To learn more, you can also read ILAO's article on [**filing a motion to vacate a default judgment**](https://www.illinoislegalaid.org/node/32406).  
 ---
@@ -224,9 +224,9 @@ buttons:
 ---
 id: default judgment date
 question: |
-  When did the court enter a default judgment against you?
+  When did the judge enter a default judgment against you?
 subquestion: |
-  This is the date that the judge signed the order. It should be written or stamped on the judgment.
+  This is the date that the judge signed the order. It should be written or stamped on the default judgment order.
 fields:
   - Default judgment date: judgment_date
     datatype: ThreePartsDate
@@ -288,7 +288,7 @@ buttons:
 ---
 id: any other users
 question: |
-  Is anyone else on your side of this case?
+  Are there any other ${ party_label }s this case?
 subquestion: |
   ${ collapse_template(other_users_help) }  
 
@@ -303,7 +303,7 @@ template: other_users_help
 subject: |
   **Learn about other ${ party_label }s**
 content: |  
-  You said you are the ${ party_label }. The other people on your side of the case would be co-${ party_label}s.
+  You said you are the ${ party_label }. If other people are being sued along with you in the case, they are called co-${ party_label}s.
   
   The other ${ party_label}s should be listed with you at the top of your court papers.
 ---
@@ -325,7 +325,7 @@ sets:
   - users[i].name.first
 id: other users names
 question: |
-  What is the name of the ${ ordinal(i - 1 ) } other person who is part of the case with you?
+  What is the name of the ${ ordinal(i - 1 ) } co-${ party_label } in your case?
 subquestion: |
   ${ collapse_template(long_name_help) }
 fields:
@@ -403,7 +403,7 @@ question: |
 subquestion: |
   Look at the name of the case at the top of the court papers. "In re" is often used in probate, guardianship, and some family law cases. For example, a probate case regarding Jane Doe’s estate might be called "In re: Estate of Jane Doe."
 
-  **Note:** If the court papers say "In re:" but also list the names of people in the case, you can select **No**. For example, if the case title is "In re: Marriage of Julia Smith and Tony Smith," the names you already entered will be put on your forms.
+  **Note:** If the court papers say "In re:" but also list the names of people in the case, you can select **No**. For example, if the case title is "In re: Marriage of Julia Smith and Tony Smith," the names you already entered will be put on your forms so you can select **No**.
 fields:
   - no label: in_re_check
     datatype: yesnoradio
@@ -488,9 +488,9 @@ validation code: |
 ---
 id: jury demand
 question: |
-  Who do you want to decide your case?
+  If the judge approves your motion, who do you want to decide your case?
 subquestion: |
-  In your motion, you can ask the judge to let you file a *Jury Request*. You will need to ask for this in your motion since the time to make the request for a jury has expired. However, the judge can restore this option.
+  In your motion, you can ask the judge to let you file a late *Jury Request*. You must ask for this in your motion since the time to request a jury has passed. The judge will decide if you can still request a jury.
   
   **Note:** You do not have a right to a jury trial in every case. There can be an additional fee for a jury trial if you are not filing a fee waiver.
   
@@ -648,13 +648,13 @@ terms:
 id: notice intro
 continue button field: notice_intro
 question: |
-  Tell all other parties in your case about your motion
+  Let the other parties in your case know about your motion
 subquestion: |
   These are the other parties in this case: ${comma_and_list(delivery_parties)}.
 
-  You must tell them about your motion and when you will present it to the judge.
+  You must let them know about your motion and when you will present it to the judge.
 
-  If someone in the case has a lawyer, you must tell their lawyer.
+  If someone in the case has a lawyer, you must let their lawyer know.
 
   **Note:** You must deliver your forms before the court date when you will present your motion to the judge.
 ---
@@ -736,9 +736,9 @@ question: |
 subquestion: |
   Your court date could be in person, by phone, or by video. If your court date is by phone or video, it is called a "Remote Appearance."
   
-  Enter how to attend the court hearing below. If the clerk did not give you this information yet, leave it blank. You can add it to the *Notice of Court Date for Motion* after you file your *Motion*.
+  Enter the court date details below. If the clerk did not give you this information yet, leave it blank. You can add it to the *Notice of Court Date for Motion* after you file your *Motion*.
   
-  **Note:** Be sure to add this to your *Notice of Court Date for Motion* before you send it to other parties in your case.
+  **Note:** Be sure to add the court date information to your *Notice of Court Date for Motion* before you send it to other parties in your case.
 
   ${ collapse_template(hearing_info_help) }  
 fields:

@@ -44,7 +44,7 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
     return out
 
 setup(name='docassemble.VacateDefaultJudgment',
-      version='0.2.0',
+      version='0.2.1',
       description=('A docassemble extension.'),
       long_description='# docassemble.Motion\r\n\r\nA docassemble extension.\r\n\r\n## Author\r\n\r\nMatt Newsted, mnewsted@illinoislegalaid.org\r\n\r\n',
       long_description_content_type='text/markdown',
