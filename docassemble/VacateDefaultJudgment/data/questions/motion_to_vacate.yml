@@ -74,7 +74,8 @@ code: |
   
   set_progress(40)
   nav.set_section('section_motion')
-  reasons
+  if present_in_court == False:
+    reasons
   date_learned
   judgment_time
   trial_with
@@ -254,7 +255,7 @@ buttons:
 ---
 id: party label
 question: |
-  What is your party label in the case?
+  What is your role in the case?
 subquestion: |
   ${ collapse_template(which_party) }  
 field: party_label
@@ -266,7 +267,7 @@ choices:
 ---
 template: which_party
 subject: |
-  **Learn more about party labels**
+  **Learn more about roles and party labels**
 content: |
   If you filed a new case, you are either the Plaintiff or the Petitioner.
 
@@ -449,6 +450,14 @@ content: |
   
   [FILE case_number_example.png, 100%, Summons form showing case number]
 ---
+id: present in court
+question: |
+  Were you present in court when the default judgment was entered against you?
+fields:
+  - no label: present_in_court
+    datatype: yesnoradio
+
+---
 id: reasons for missing court date
 question: |
   Why did you miss court on ${ judgment_date }?
@@ -465,6 +474,8 @@ fields:
 id: date learned of judgment
 question: |
   When did you learn about the default judgment?
+subquestion: |
+  You said the default judgment was entered on ${ judgment_date }.
 fields:
   - Date you learned about default judgment: date_learned
     datatype: ThreePartsDate
@@ -506,6 +517,7 @@ depends on:
   - users[0].name
   - judgment_date
   - date_learned
+  - present_in_court
   - reasons
   - judgment_time
   - dont_know_judgment_time
@@ -516,11 +528,16 @@ code: |
   motion_body += "1. This motion is filed within 30 days of the default judgment of " + judgment_date + ".\n \n"
 
   if dont_know_judgment_time == False:
-    motion_body += "2. On " + judgment_date + ", my case was set to be heard at " + format_time(judgment_time) + ". I did not appear at the hearing on that date and time because: " + reasons 
+    motion_body += "2. On " + judgment_date + ", my case was set to be heard at " + format_time(judgment_time) + ". "
   else:
-    motion_body += "2. On " + judgment_date + ", my case was set to be heard. I did not appear at the hearing on that date because: " + reasons
+    motion_body += "2. On " + judgment_date + ", my case was set to be heard. "
+  
+  if present_in_court:
+    motion_body += "I am a self-represented litigant who failed to file an Appearance or Answer, but I did attend court on the day that the judgment was entered. If my Motion to Vacate is granted I can file the Appearance or Answer within 14 days of the order of vacating the default judgment."
+  else: 
+    motion_body += "I did not appear at the hearing on that date and time because: " + reasons 
 
-  motion_body += "\n \n3.	I learned of the default judgment on " + judgment_date + ".\n \n"
+  motion_body += "\n \n3.	I learned of the default judgment on " + date_learned + ".\n \n"
 
   additional_motion_body = "4. I filed this motion as soon as possible after learning of the default.\n \n"
 
@@ -531,9 +548,9 @@ code: |
   additional_motion_body += "7. In this case, justice will be served only by vacating the default judgment entered against me and allowing the case to proceed to trial on its merits. \n \n"
 
   if trial_with == "judge_only":
-    additional_motion_body += "WHEREFORE, I ask that this court vacate the default judgment of " + judgment_date + ", stay all proceedings, and grant me leave to file an Appearance at this time."
+    additional_motion_body += "WHEREFORE, I ask that this court vacate the default judgment of " + judgment_date + ", stay all proceedings, and grant me leave to file an Appearance or Answer at this time."
   else:
-    additional_motion_body += "WHEREFORE, I ask that this court vacate the default judgment of " + judgment_date + ", stay all proceedings, and grant me leave to file an Appearance and Jury Demand at this time."
+    additional_motion_body += "WHEREFORE, I ask that this court vacate the default judgment of " + judgment_date + ", stay all proceedings, and grant me leave to file an Appearance or Answer and Jury Demand at this time."
 
 ---
 id: debug motion body
@@ -812,13 +829,15 @@ field: x.is_represented
 choices:
   - Yes: True
   - No: False
-  - I don't know: null 
+  - I don't know.: null 
 # note: null will be None in review screen
 ---
 id: add lawyer
 generic object: ALIndividual
 question: |
-  Who is  ${ x.name.full(middle="full") }'s lawyer?
+  Who is ${ x.name.full(middle="full") }'s lawyer?
+subquestion: |
+  The lawyer's information should be on your court papers. You also may be able to find this information from the Circuit Clerk of ${ trial_court.address.county } County. Visit the [**Illinois Courts website**](https://www.illinoiscourts.gov/courts-directory/interactive-map/by-court-type/) to look up how to contact the clerk's office.
 fields:
   - First name: x.lawyer.name.first
   - Middle name: x.lawyer.name.middle
@@ -841,6 +860,10 @@ question: |
   % else:
   What is ${ x.name.full(middle="full") }'s address?
   % endif
+subquestion: |
+  % if x.is_represented:
+  The lawyer's information should be on your court papers. You also may be able to find this information from the Circuit Clerk of ${ trial_court.address.county } County. Visit the [**Illinois Courts website**](https://www.illinoiscourts.gov/courts-directory/interactive-map/by-court-type/) to look up how to contact the clerk's office.
+  % endif  
 fields:
   - Street address: x.address.address
     address autocomplete: True
@@ -866,6 +889,10 @@ question: |
   % else:
   What is ${ users[i].name.full(middle="full") }'s address?
   % endif
+subquestion: |
+  % if users[i].is_represented:
+  The lawyer's information should be on your court papers. You also may be able to find this information from the Circuit Clerk of ${ trial_court.address.county } County. Visit the [**Illinois Courts website**](https://www.illinoiscourts.gov/courts-directory/interactive-map/by-court-type/) to look up how to contact the clerk's office.
+  % endif    
 fields:
   - Street address: users[i].address.address
     address autocomplete: True
@@ -1663,6 +1690,10 @@ review:
     button: |
       **When was a default judgment entered against you?**
       ${ judgment_date }
+  - Edit: present_in_court
+    button: |
+      **Were you present in court whent he default judgment was entered?**
+      ${ word(yesno(present_in_court))}
   - Edit: date_learned
     button: |
       **When did you learn about the default judgment?**
@@ -1671,7 +1702,7 @@ review:
     button: |
       **Why you missed court:**
       ${ reasons }
-
+    show if: present_in_court == False
   - Edit: judgment_time
     button: |
       **When were you supposed to attend court on ${ judgment_date }?**
@@ -1680,6 +1711,7 @@ review:
       % else:
       ${ format_time(judgment_time) }
       % endif
+    show if: present_in_court == False
   - Edit: trial_with
     button: |
       **If the case goes to trial, you would like it decided by:**
@@ -1965,6 +1997,10 @@ review:
     button: |
       **When was a default judgment entered against you?**
       ${ judgment_date }
+  - Edit: present_in_court
+    button: |
+      **Were you present in court whent he default judgment was entered?**
+      ${ word(yesno(present_in_court))}
   - Edit: date_learned
     button: |
       **When did you learn about the default judgment?**
@@ -1973,7 +2009,7 @@ review:
     button: |
       **Why you missed court:**
       ${ reasons }
-
+    show if: present_in_court == False
   - Edit: judgment_time
     button: |
       **When were you supposed to attend court on ${ judgment_date }?**
@@ -1982,6 +2018,7 @@ review:
       % else:
       ${ format_time(judgment_time) }
       % endif
+    show if: present_in_court == False
   - Edit: trial_with
     button: |
       **If the case goes to trial, you would like it decided by:**
