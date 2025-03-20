@@ -533,7 +533,7 @@ code: |
     motion_body += "2. On " + judgment_date + ", my case was set to be heard. "
   
   if present_in_court:
-    motion_body += "I am a self-represented litigant who failed to file an Appearance or Answer, but I did attend court on the day that the judgment was entered. If my Motion to Vacate is granted I can file the Appearance or Answer within 14 days of the order of vacating the default judgment."
+    motion_body += "I am a self-represented litigant who failed to timely file an Appearance or Answer, but I did attend court on the day that the judgment was entered. If my Motion to Vacate is granted I can file the Appearance or Answer within 14 days of the order of vacating the default judgment."
   else: 
     motion_body += "I did not appear at the hearing on that date and time because: " + reasons 
 
@@ -759,7 +759,7 @@ subquestion: |
 
   ${ collapse_template(hearing_info_help) }  
 fields:
-  - Courtroom number: courtroom
+  - Courtroom number (if known): courtroom
     maxlength: 10
     required: False
   - How to attend court (check all that apply): attend_court
