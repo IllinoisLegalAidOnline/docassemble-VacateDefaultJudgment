@@ -128,6 +128,8 @@ code: |
   stuff_to_snapshot['zip'] = showifdef('users[0].address.zip')
 
   stuff_to_snapshot['downloaded_forms'] = showifdef('forms_assembling')
+
+  stuff_to_snapshot['present_in_court'] = showifdef('present_in_court')
   
   store_variables_snapshot(
   	data=stuff_to_snapshot, persistent=True
