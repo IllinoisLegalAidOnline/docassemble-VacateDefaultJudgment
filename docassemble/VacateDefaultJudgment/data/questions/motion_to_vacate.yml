@@ -382,7 +382,7 @@ continue button field: case_county
 question: |
   In which county was this case filed?
 fields:
-  - no label: trial_court_index
+  - County: trial_court_index
     datatype: integer
     code: |
       court_county_lookup()
@@ -643,9 +643,8 @@ subquestion: |
     <h6 class="alert-heading">What it means to sign your forms</h6>
     <p>By signing the <i>Motion</i> and Proof of Delivery section of your forms, you are certifying that:</p>
     <p><ul>
-      <li>Everything on the forms is true and correct, or you have been informed or you believe it is true and correct, and</li>
-      <li>You understand that making a false statement on the forms is perjury and has penalties provided by law.</li>
-    </ul></p>
+      <li>Everything on the forms is true and correct, and</li>
+      <li>You understand that making a false statement on the form is perjury and has penalties provided by law.</li>    </ul></p>
   <p>See the <a href="https://www.ilga.gov/legislation/ilcs/documents/073500050k1-109.htm"><b>Code of Civil Procedure, 735 ILCS 5/1-109</b></a> for more information.</p>
     <p>By signing the <i>Notice of Court Date for Motion</i> form, you are certifying that:</p>
     <p><ul>
@@ -825,11 +824,13 @@ id: has lawyer
 generic object: ALIndividual
 question: |
   Does ${ x.name.full(middle="full") } have a lawyer in this case?
-field: x.is_represented
-choices:
-  - Yes: True
-  - No: False
-  - I don't know.: null 
+fields:
+  - no label: x.is_represented
+    datatype: radio
+    choices:
+    - Yes: True
+    - No: False
+    - I don't know.: null
 # note: null will be None in review screen
 ---
 id: add lawyer
@@ -919,10 +920,12 @@ subquestion: |
   For best results, complete the Proof of Delivery section and send the forms today.
 
   If you do not know this now, you can add it to the Proof of Delivery section of your forms later.
-field: x.knows_delivery_method
-choices:
-  - Yes: True
-  - No. I do not know this now. I will add it to my forms later.: False
+fields:
+  - no label: x.knows_delivery_method
+    datatype: radio
+    choices:
+      - Yes: True
+      - No. I do not know this now. I will add it to my forms later.: False
 ---
 template: delivery_method_help
 subject: |
@@ -1174,6 +1177,8 @@ question: |
   Almost done
 subquestion: |
   After you click **Next**, it may take a few moments to finish making your forms.
+
+  **Note:** Your Motion will include an Additional Page that has important information that explains why the judge should vacate the default order. Be sure to review it before filing. 
   
   ###### You do not need to refresh your screen. Hang in there!
   
@@ -1865,7 +1870,11 @@ review:
   - Edit: x.delivery_date
     button: |
       **Delivery on:**
+      % if x.knows_delivery_date == True and x.knows_delivery_time == True:
       ${ x.delivery_date } at ${ format_time(x.delivery_time, "h:mm a") }
+      % else:
+      Incomplete date and time entered.
+      % endif      
     show if: x.knows_delivery_method
 ---
 id: users review screen
