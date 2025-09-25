@@ -465,7 +465,7 @@ question: |
 subquestion: |
   Some people miss court because of a family or medical emergency. Sometimes they don't know about the court date because court papers did not arrive in time or were confusing.
   
-  This section has room for 500 characters including spaces. You will be able to explain more to the judge at the court hearing.
+  This section has room for **500 characters** including spaces. You will be able to explain more to the judge at the court hearing.
 fields:
   - I missed court because:: reasons
     input type: area
@@ -667,7 +667,7 @@ continue button field: notice_intro
 question: |
   Let the other parties in your case know about your motion
 subquestion: |
-  These are the other parties in this case: ${comma_and_list(delivery_parties)}.
+  These are the other parties in this case: ${delivery_parties.full_names()}.
 
   You must let them know about your motion and when you will present it to the judge.
 
@@ -1041,7 +1041,7 @@ fields:
   - Date: x.delivery_date
     datatype: date
     required: False
-    min: ${ today().minus(years=1) }
+    min: ${ judgment_date }
     max: ${ today().plus(years=1) }
   - Time: x.delivery_time
     datatype: time
