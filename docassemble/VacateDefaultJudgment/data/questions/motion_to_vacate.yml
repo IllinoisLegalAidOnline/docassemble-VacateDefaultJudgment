@@ -295,7 +295,7 @@ subquestion: |
   ${ collapse_template(other_users_help) }  
 
   % if len(users.elements) > 1:  
-  So far you have told us about ${users.full_names()}.
+  So far you have told us about ${fix_punctuation( users.full_names() )}
   % endif  
 fields:
   - "Anyone else?": users.there_is_another
@@ -373,7 +373,7 @@ id: any more other parties
 question: |
   Are there any other ${ opposing_label }s in the case?
 subquestion: |  
-  So far you have told us about ${other_parties.full_names()}.
+  So far you have told us about ${fix_punctuation( other_parties.full_names() ) }
 fields:
   - "Anyone else?": other_parties.there_is_another
     datatype: yesnoradio
@@ -454,6 +454,10 @@ content: |
 id: present in court
 question: |
   Were you present in court when the default judgment was entered against you?
+subquestion: |
+  You can explain why you were not able to participate on the next screen.
+  
+  If you were trying to access court remotely through videoconferencing like Zoom, but could not connect, or if others could not see or hear you, click **No**.
 fields:
   - no label: present_in_court
     datatype: yesnoradio
@@ -463,7 +467,7 @@ id: reasons for missing court date
 question: |
   Why did you miss court on ${ judgment_date }?
 subquestion: |
-  Some people miss court because of a family or medical emergency. Sometimes they don't know about the court date because court papers did not arrive in time or were confusing.
+  Some people miss court because of a family or medical emergency. Sometimes they don't know about the court date because court papers did not arrive in time or were confusing. And sometimes there are technical difficulties when trying to access court remotely.
   
   This section has room for **500 characters** including spaces. You will be able to explain more to the judge at the court hearing.
 fields:
@@ -653,7 +657,7 @@ subquestion: |
     <p><ul>
       <li>Everything on the forms is true and correct, or you have been informed or believe it to be true and correct, and</li>
       <li>You understand that making a false statement on the forms is perjury and has penalties provided by law.</li>    </ul></p>
-  <p>See the <a href="https://www.ilga.gov/legislation/ilcs/documents/073500050k1-109.htm"><b>Code of Civil Procedure, 735 ILCS 5/1-109</b></a> for more information.</p>
+  <p>See the <a href="https://www.ilga.gov/legislation/ilcs/documents/073500050k1-109.htm"><b>Illinois Code of Civil Procedure, 735 ILCS 5/1-109</b></a> for more information.</p>
   </div>
 fields:
   - "Add e-signature?": e_signature
@@ -667,7 +671,7 @@ continue button field: notice_intro
 question: |
   Let the other parties in your case know about your motion
 subquestion: |
-  These are the other parties in this case: ${delivery_parties.full_names()}.
+  These are the other parties in this case: ${fix_punctuation( delivery_parties.full_names() )}
 
   You must let them know about your motion and when you will present it to the judge.
 
@@ -813,7 +817,7 @@ continue button field: delivery_intro
 question: |
   Send your forms to all other parties
 subquestion: |
-  These are the other parties in this case: ${delivery_parties.full_names()}.
+  These are the other parties in this case: ${fix_punctuation( delivery_parties.full_names() )}
 
   You must send a copy of your forms to each of them.
 
@@ -1024,6 +1028,8 @@ subject: |
   **What if I need help sending my forms electronically?**
 content: |  
   If you need help delivering by email or using the e-filing system, you can visit a [**Legal Self-Help Center**](https://www.illinoislegalaid.org/get-legal-help/lshc-directory) or you can call, chat, or text a Court Guide at [**Illinois Court Help**](https://www.ilcourthelp.gov) or 833-411-1121.
+
+  To learn more, read [**ILAO's article about e-filing**](https://www.illinoislegalaid.org/node/109496).  
 ---
 id: delivery time
 generic object: ALIndividual
@@ -1274,7 +1280,7 @@ attachment:
       - "document_name": Motion to Vacate Default Judgment       
       - "delivery_party1_name_full": | 
           % if delivery_parties[0].is_represented:
-          ${ delivery_parties[0].lawyer.name_full() }, (lawyer for ${ delivery_parties[0].name_full() })
+          ${ delivery_parties[0].lawyer.name_full() } (lawyer for ${ delivery_parties[0].name_full() })
           % else:
           ${ delivery_parties[0].name_full() }
           % endif
@@ -1503,7 +1509,7 @@ attachment:
       - "document_name": Motion to Vacate Default Judgment
       - "delivery_party1_name_full": | 
           % if delivery_parties[0].is_represented:
-          ${ delivery_parties[0].lawyer.name_full() }, (lawyer for ${ delivery_parties[0].name_full() })
+          ${ delivery_parties[0].lawyer.name_full() } (lawyer for ${ delivery_parties[0].name_full() })
           % else:
           ${ delivery_parties[0].name_full() }
           % endif
